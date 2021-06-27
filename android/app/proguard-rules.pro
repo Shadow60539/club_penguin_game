@@ -1,0 +1,1 @@
+-keep class com.sanjeev.penguin_chat_game.BuildConfig { *; }
