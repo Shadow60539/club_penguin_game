@@ -1,4 +1,5 @@
-[![Test](https://github.com/Shadow60539/social_media_game/actions/workflows/test.yml/badge.svg?style=flat&logo=appveyor)](https://github.com/Shadow60539/social_media_game/actions/workflows/test.yml)
+[![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://pub.dev/packages/fancy_text_reveal)   ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
+[![Test](https://github.com/Shadow60539/club_penguin_game/actions/workflows/test.yml/badge.svg?style=flat&logo=appveyor)](https://github.com/Shadow60539/club_penguin_game/actions/workflows/test.yml)
 
 # Club Penguin 
 
