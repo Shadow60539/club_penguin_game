@@ -11,6 +11,7 @@ import 'package:social_media_game/application/movement/movement_bloc.dart';
 import 'package:social_media_game/application/providers/chat_provider.dart';
 import 'package:social_media_game/application/status/status_bloc.dart';
 import 'package:social_media_game/core/services/navigation_service.dart';
+import 'package:social_media_game/presentation/game/game.dart';
 import 'package:social_media_game/presentation/home/pages/home_page.dart';
 
 import 'application/providers/world_provider.dart';
@@ -33,6 +34,8 @@ Future<void> main() async {
     "walk_me.png",
     "hurt.png",
     "chat.png",
+    "chat_idle.png",
+    "chat_run.png",
     "background/screen1/1.png",
     "background/screen1/2.png",
     "background/screen1/3.png",
@@ -76,7 +79,7 @@ class MyApp extends StatelessWidget {
             create: (context) => getIt<ChatBloc>(),
           ),
           ChangeNotifierProvider(
-            create: (_) => ChatProvider(),
+            create: (_) => ChatProvider(getIt<ClubPenguinGame>()),
           ),
           ChangeNotifierProvider(
             create: (_) => WorldProvider(),

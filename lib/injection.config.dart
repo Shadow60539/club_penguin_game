@@ -11,6 +11,7 @@ import 'package:injectable/injectable.dart' as _i2;
 import 'application/auth/auth_bloc.dart' as _i16;
 import 'application/chat/chat_bloc.dart' as _i17;
 import 'application/movement/movement_bloc.dart' as _i13;
+import 'application/providers/chat_provider.dart' as _i18;
 import 'application/status/status_bloc.dart' as _i15;
 import 'core/services/navigation_service.dart' as _i14;
 import 'domain/auth/i_auth_repo.dart' as _i5;
@@ -19,7 +20,7 @@ import 'domain/movement/i_movement_repo.dart' as _i9;
 import 'domain/status/i_status_repo.dart' as _i11;
 import 'infrastructure/auth/auth_repo.dart' as _i6;
 import 'infrastructure/chat/chat_repo.dart' as _i8;
-import 'infrastructure/injectable_module.dart' as _i18;
+import 'infrastructure/injectable_module.dart' as _i19;
 import 'infrastructure/movement/movement_repo.dart' as _i10;
 import 'infrastructure/status/status_repo.dart' as _i12;
 import 'presentation/game/game.dart' as _i3;
@@ -51,7 +52,9 @@ _i1.GetIt $initGetIt(_i1.GetIt get,
       registerFor: {_prod});
   gh.factory<_i17.ChatBloc>(() => _i17.ChatBloc(get<_i7.IChatRepo>()),
       registerFor: {_prod});
+  gh.lazySingleton<_i18.ChatProvider>(
+      () => _i18.ChatProvider(get<_i3.ClubPenguinGame>()));
   return get;
 }
 
-class _$InjectableModule extends _i18.InjectableModule {}
+class _$InjectableModule extends _i19.InjectableModule {}

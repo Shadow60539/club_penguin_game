@@ -31,7 +31,10 @@ class MovementBloc extends Bloc<MovementEvent, MovementState> {
     yield* event.map(
       updatePosition: (e) async* {
         final _failureOrSuccess = await movementRepo.updatePosition(
-            x: e.x, currentBackground: e.background);
+          x: e.x,
+          currentBackground: e.background,
+          isTyping: e.isTyping,
+        );
 
         yield _failureOrSuccess.fold(
           (l) => state.copyWith(movementOption: some(left(l))),

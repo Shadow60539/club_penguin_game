@@ -89,13 +89,14 @@ class ClubPenguinGameWidget extends StatelessWidget {
       overlayBuilderMap: {
         ONLINE_GREEN: (_, __) => greenIconOverlay(),
         LEVEL_TEXT: (_, __) => _levelTextOverlay(),
-        TEXT_FIELD: (_, __) => _chatBoxTextFormField()
+        TEXT_FIELD: (_, ClubPenguinGame game) => _chatBoxTextFormField(game)
       },
     );
   }
 
-  Widget _chatBoxTextFormField() {
-    const String _hintText = 'Chat with other penguins';
+  Widget _chatBoxTextFormField(ClubPenguinGame game) {
+    const String _hintText = 'Start typing...';
+    // const String _hintText = 'Chat with other penguins';
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
@@ -103,12 +104,18 @@ class ClubPenguinGameWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 200),
         margin: const EdgeInsets.only(bottom: 20),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
           child: Consumer<ChatProvider>(
             builder: (_, chatProvider, __) {
               return TextFormField(
-                cursorColor: Colors.white,
+                cursorColor: Colors.black12,
                 controller: chatProvider.textEditingController,
+                onChanged: (_) {
+                  // game.joystick.remove();
+                },
+                onFieldSubmitted: (_) {
+                  chatProvider.onMessageSent();
+                },
                 style: TextStyle(
                     fontSize: 8, color: Colors.black.withOpacity(0.7)),
                 decoration: const InputDecoration(

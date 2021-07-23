@@ -4,7 +4,6 @@ import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/sprite.dart';
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:social_media_game/application/chat/chat_bloc.dart';
 import 'package:social_media_game/application/movement/movement_bloc.dart';
@@ -17,6 +16,7 @@ import 'package:social_media_game/presentation/game/game.dart';
 class Penguin extends SpriteAnimationComponent
     with JoystickListener, HasGameRef<ClubPenguinGame> {
   late SpriteAnimation _idleAnimation;
+  late SpriteAnimation _chatIdleAnimation;
   late SpriteAnimation _walkAnimation;
 
   MyTextBox? _myTextBox;
@@ -28,11 +28,16 @@ class Penguin extends SpriteAnimationComponent
   Penguin() {
     final SpriteSheet _idleSpriteSheet = SpriteSheet(
         image: Flame.images.fromCache("idle_me.png"), srcSize: Vector2(32, 48));
+    final SpriteSheet _chatIdleSpriteSheet = SpriteSheet(
+        image: Flame.images.fromCache("chat_idle.png"),
+        srcSize: Vector2(32, 48));
     final SpriteSheet _walkSpriteSheet = SpriteSheet(
         image: Flame.images.fromCache("walk_me.png"), srcSize: Vector2(33, 48));
 
-    _walkAnimation = _walkSpriteSheet.createAnimation(stepTime: 0.1, row: 0);
     _idleAnimation = _idleSpriteSheet.createAnimation(stepTime: 0.1, row: 0);
+    _chatIdleAnimation =
+        _chatIdleSpriteSheet.createAnimation(stepTime: 0.1, row: 0);
+    _walkAnimation = _walkSpriteSheet.createAnimation(stepTime: 0.1, row: 0);
 
     _timer = Timer(1, repeat: true, callback: () {
       _updateXToServer(x: x, currentBackground: gameRef.currentBackground);
@@ -84,8 +89,17 @@ class Penguin extends SpriteAnimationComponent
 
   void _updateXToServer(
       {required double x, required Background currentBackground}) {
-    MovementBloc.addEventWithoutContext(
-        MovementEvent.updatePosition(x: x, background: currentBackground));
+    final String _messageToBeSent = cleanString(
+        Provider.of<ChatProvider>(context, listen: false)
+            .textEditingController
+            .text);
+
+    final bool _isTyping = _messageToBeSent.isNotEmpty;
+    MovementBloc.addEventWithoutContext(MovementEvent.updatePosition(
+      x: x,
+      background: currentBackground,
+      isTyping: _isTyping,
+    ));
   }
 
   // void _updateBackgroundToServer(Background currentBackground) {
@@ -95,18 +109,10 @@ class Penguin extends SpriteAnimationComponent
 
   @override
   void joystickAction(JoystickActionEvent event) {
-    final String _messageToBeSent = cleanString(
-        Provider.of<ChatProvider>(context, listen: false)
-            .textEditingController
-            .text);
-
-    if (!_sendingMessageTimer.isRunning() && _messageToBeSent.isNotEmpty) {
-      FocusScope.of(context).unfocus();
+    if (!_sendingMessageTimer.isRunning()) {
       _sendingMessageTimer.start();
 
-      ChatBloc.addEventWithoutContext(ChatEvent.sendMessage(_messageToBeSent));
-
-      Provider.of<ChatProvider>(context, listen: false).onMessageSent();
+      ChatBloc.addEventWithoutContext(const ChatEvent.sendMessage("Hi!"));
     }
   }
 
@@ -166,5 +172,13 @@ class Penguin extends SpriteAnimationComponent
     final _size = gameRef.size.toSize();
     width = _size.width / 10;
     height = 100;
+  }
+
+  void changeAnimationToTyping() {
+    animation = _chatIdleAnimation;
+  }
+
+  void changeAnimationToIdle() {
+    animation = _idleAnimation;
   }
 }

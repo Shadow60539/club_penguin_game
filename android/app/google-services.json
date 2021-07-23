@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "163853314061",
+    "firebase_url": "https://social-media-game-ff034-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "social-media-game-ff034",
+    "storage_bucket": "social-media-game-ff034.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:163853314061:android:007125d2baab7287bd0d44",
+        "android_client_info": {
+          "package_name": "com.example.sample"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "163853314061-vpca55em5u08n15jgcfgfkk3lfv17vqb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCN7pxwGhBsSjlkZyU6omzBl8pMqykj8Vk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "163853314061-vpca55em5u08n15jgcfgfkk3lfv17vqb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:163853314061:android:8bcd2233cdfe1b2cbd0d44",
+        "android_client_info": {
+          "package_name": "com.example.social_media_game"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "163853314061-vpca55em5u08n15jgcfgfkk3lfv17vqb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCN7pxwGhBsSjlkZyU6omzBl8pMqykj8Vk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "163853314061-vpca55em5u08n15jgcfgfkk3lfv17vqb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:163853314061:android:5ab9fc0ac016fadbbd0d44",
+        "android_client_info": {
+          "package_name": "com.sanjeev.penguin_chat_game"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "163853314061-vpca55em5u08n15jgcfgfkk3lfv17vqb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCN7pxwGhBsSjlkZyU6omzBl8pMqykj8Vk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "163853314061-vpca55em5u08n15jgcfgfkk3lfv17vqb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

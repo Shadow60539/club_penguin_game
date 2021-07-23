@@ -17,10 +17,13 @@ class _$MovementEventTearOff {
   const _$MovementEventTearOff();
 
   _UpdatePosition updatePosition(
-      {required double x, required Background background}) {
+      {required double x,
+      required Background background,
+      required bool isTyping}) {
     return _UpdatePosition(
       x: x,
       background: background,
+      isTyping: isTyping,
     );
   }
 }
@@ -32,15 +35,18 @@ const $MovementEvent = _$MovementEventTearOff();
 mixin _$MovementEvent {
   double get x => throw _privateConstructorUsedError;
   Background get background => throw _privateConstructorUsedError;
+  bool get isTyping => throw _privateConstructorUsedError;
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(double x, Background background) updatePosition,
+    required TResult Function(double x, Background background, bool isTyping)
+        updatePosition,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(double x, Background background)? updatePosition,
+    TResult Function(double x, Background background, bool isTyping)?
+        updatePosition,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -66,7 +72,7 @@ abstract class $MovementEventCopyWith<$Res> {
   factory $MovementEventCopyWith(
           MovementEvent value, $Res Function(MovementEvent) then) =
       _$MovementEventCopyWithImpl<$Res>;
-  $Res call({double x, Background background});
+  $Res call({double x, Background background, bool isTyping});
 }
 
 /// @nodoc
@@ -82,6 +88,7 @@ class _$MovementEventCopyWithImpl<$Res>
   $Res call({
     Object? x = freezed,
     Object? background = freezed,
+    Object? isTyping = freezed,
   }) {
     return _then(_value.copyWith(
       x: x == freezed
@@ -92,6 +99,10 @@ class _$MovementEventCopyWithImpl<$Res>
           ? _value.background
           : background // ignore: cast_nullable_to_non_nullable
               as Background,
+      isTyping: isTyping == freezed
+          ? _value.isTyping
+          : isTyping // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -103,7 +114,7 @@ abstract class _$UpdatePositionCopyWith<$Res>
           _UpdatePosition value, $Res Function(_UpdatePosition) then) =
       __$UpdatePositionCopyWithImpl<$Res>;
   @override
-  $Res call({double x, Background background});
+  $Res call({double x, Background background, bool isTyping});
 }
 
 /// @nodoc
@@ -121,6 +132,7 @@ class __$UpdatePositionCopyWithImpl<$Res>
   $Res call({
     Object? x = freezed,
     Object? background = freezed,
+    Object? isTyping = freezed,
   }) {
     return _then(_UpdatePosition(
       x: x == freezed
@@ -131,6 +143,10 @@ class __$UpdatePositionCopyWithImpl<$Res>
           ? _value.background
           : background // ignore: cast_nullable_to_non_nullable
               as Background,
+      isTyping: isTyping == freezed
+          ? _value.isTyping
+          : isTyping // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -138,16 +154,19 @@ class __$UpdatePositionCopyWithImpl<$Res>
 /// @nodoc
 
 class _$_UpdatePosition implements _UpdatePosition {
-  const _$_UpdatePosition({required this.x, required this.background});
+  const _$_UpdatePosition(
+      {required this.x, required this.background, required this.isTyping});
 
   @override
   final double x;
   @override
   final Background background;
+  @override
+  final bool isTyping;
 
   @override
   String toString() {
-    return 'MovementEvent.updatePosition(x: $x, background: $background)';
+    return 'MovementEvent.updatePosition(x: $x, background: $background, isTyping: $isTyping)';
   }
 
   @override
@@ -158,14 +177,18 @@ class _$_UpdatePosition implements _UpdatePosition {
                 const DeepCollectionEquality().equals(other.x, x)) &&
             (identical(other.background, background) ||
                 const DeepCollectionEquality()
-                    .equals(other.background, background)));
+                    .equals(other.background, background)) &&
+            (identical(other.isTyping, isTyping) ||
+                const DeepCollectionEquality()
+                    .equals(other.isTyping, isTyping)));
   }
 
   @override
   int get hashCode =>
       runtimeType.hashCode ^
       const DeepCollectionEquality().hash(x) ^
-      const DeepCollectionEquality().hash(background);
+      const DeepCollectionEquality().hash(background) ^
+      const DeepCollectionEquality().hash(isTyping);
 
   @JsonKey(ignore: true)
   @override
@@ -175,19 +198,21 @@ class _$_UpdatePosition implements _UpdatePosition {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(double x, Background background) updatePosition,
+    required TResult Function(double x, Background background, bool isTyping)
+        updatePosition,
   }) {
-    return updatePosition(x, background);
+    return updatePosition(x, background, isTyping);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(double x, Background background)? updatePosition,
+    TResult Function(double x, Background background, bool isTyping)?
+        updatePosition,
     required TResult orElse(),
   }) {
     if (updatePosition != null) {
-      return updatePosition(x, background);
+      return updatePosition(x, background, isTyping);
     }
     return orElse();
   }
@@ -215,12 +240,16 @@ class _$_UpdatePosition implements _UpdatePosition {
 
 abstract class _UpdatePosition implements MovementEvent {
   const factory _UpdatePosition(
-      {required double x, required Background background}) = _$_UpdatePosition;
+      {required double x,
+      required Background background,
+      required bool isTyping}) = _$_UpdatePosition;
 
   @override
   double get x => throw _privateConstructorUsedError;
   @override
   Background get background => throw _privateConstructorUsedError;
+  @override
+  bool get isTyping => throw _privateConstructorUsedError;
   @override
   @JsonKey(ignore: true)
   _$UpdatePositionCopyWith<_UpdatePosition> get copyWith =>

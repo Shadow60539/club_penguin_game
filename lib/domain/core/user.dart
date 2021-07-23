@@ -4,12 +4,14 @@ import 'package:social_media_game/presentation/game/game.dart';
 //TODO: Freezed
 class GameUser {
   /// The is the only model used to identify the players in the game
-  GameUser(
-      {required this.id,
-      this.name,
-      required this.x,
-      this.message,
-      required this.currentBackground});
+  GameUser({
+    required this.id,
+    this.name,
+    required this.x,
+    this.message,
+    this.isTyping = false,
+    required this.currentBackground,
+  });
 
   /// Hold uid coming from `UserCredential`
   final String id;
@@ -35,6 +37,8 @@ class GameUser {
   /// To hold the chat message sent by penguin
   String? message;
 
+  bool isTyping;
+
   /// Used in `AuthRepo`
   ///
   /// For every logout of the game the new penguin is given a default
@@ -44,19 +48,22 @@ class GameUser {
         name: user.displayName,
         x: 0.0,
         currentBackground: Background.day,
+        isTyping: false,
       );
 
   /// Used in `ClubPenguinGame`
   ///
   /// For every status change the new model is created
   factory GameUser.fromCollection(Map<String, dynamic> data) => GameUser(
-      id: data['id'] as String,
-      name: "Player", // Change later
-      message: data['message'] as String?,
-      currentBackground: data['background'] == null
-          ? Background.day
-          : _stringToBackground(data['background'] as String),
-      x: data["x"] == null ? 0.0 : (data["x"] as num).toDouble());
+        id: data['id'] as String,
+        name: "Player", // Change later
+        message: data['message'] as String?,
+        currentBackground: data['background'] == null
+            ? Background.day
+            : _stringToBackground(data['background'] as String),
+        x: data["x"] == null ? 0.0 : (data["x"] as num).toDouble(),
+        isTyping: data["isTyping"] == null ? false : (data["isTyping"] as bool),
+      );
 }
 
 Background _stringToBackground(String backgroundString) {

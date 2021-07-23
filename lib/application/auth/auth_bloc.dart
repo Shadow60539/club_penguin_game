@@ -44,7 +44,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             ChatBloc.addEventWithoutContext(const ChatEvent.sendMessage(null));
             MovementBloc.addEventWithoutContext(
                 const MovementEvent.updatePosition(
-                    x: 0.0, background: Background.day));
+              x: 0.0,
+              background: Background.day,
+              isTyping: false,
+            ));
 
             return state.copyWith(authOption: some(right(r)), user: r);
           },

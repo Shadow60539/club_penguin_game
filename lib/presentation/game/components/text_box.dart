@@ -29,7 +29,7 @@ class MyTextBox extends TextBoxComponent with HasGameRef<ClubPenguinGame> {
           boxConfig: TextBoxConfig(
               timePerChar: 0.05, maxWidth: text.length * 9.0), // T&E
         ) {
-    _timer = Timer(MESSAGE_SHOW_TIME, callback: () {
+    _timer = Timer(MESSAGE_SHOW_TIME + text.length * 0.15, callback: () {
       remove();
     });
   }

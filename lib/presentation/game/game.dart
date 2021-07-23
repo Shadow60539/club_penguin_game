@@ -73,6 +73,11 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
   /// To hold the stream `onChildChanged`
   late Stream<Event> _playerMovingStream;
 
+  /// In `FirebaseDatabase` when already existing data is changed in `USER_COLLECTION`
+  /// `onChildChanged` stream gets updated
+  /// To hold the stream `onChildChanged`
+  late Stream<Event> _playerTypingStream;
+
   /// In `FirebaseDatabase` when already existing data is changed in `MESSAGE_COLLECTION`
   /// `onChildChanged` stream gets updated
   /// To hold the stream `onChildChanged`
@@ -82,7 +87,7 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
   late TextComponent onlineText;
 
   /// Current User's model
-  late GameUser _me;
+  late GameUser me;
 
   /// To keep track of the online users count
   late int _userCount;
@@ -92,7 +97,7 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
     nightBackground = NightBackground();
     currentBackground = Background.day;
     penguin = Penguin();
-    _me = BlocProvider.of<AuthBloc>(context).state.user!;
+    me = BlocProvider.of<AuthBloc>(context).state.user!;
     _newPlayerConnectedStream = FirebaseDatabase.instance
         .reference()
         .child(USER_COLLECTION)
@@ -102,6 +107,10 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
         .child(USER_COLLECTION)
         .onChildRemoved;
     _playerMovingStream = FirebaseDatabase.instance
+        .reference()
+        .child(USER_COLLECTION)
+        .onChildChanged;
+    _playerTypingStream = FirebaseDatabase.instance
         .reference()
         .child(USER_COLLECTION)
         .onChildChanged;
@@ -222,10 +231,12 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
     _newPlayerConnectedStream.listen(_playerConnectedListener);
     _playerDisconnectedStream.listen(_playerDisconnectedListener);
     _playerMovingStream.listen(_playerMovingListener);
+    _playerTypingStream.listen(_playerTypingListener);
     _chatStream.listen(_chatStreamListener);
 
     onlineText.text = "0nline :$_userCount";
     backGroundChangeLookUp();
+
     super.update(t);
   }
 
@@ -239,7 +250,11 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
         .child(USER_COLLECTION)
         .get();
 
-    _userCount = _snapshot!.value.keys.length as int;
+    try {
+      _userCount = _snapshot!.value.keys.length as int;
+    } on Exception catch (_) {
+      // TODO
+    }
   }
 
   void _playerConnectedListener(Event event) {
@@ -250,7 +265,7 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
         Map<String, dynamic>.from(event.snapshot.value as Map));
 
     // Check if the player is you
-    if (_newCommer.id == _me.id) {
+    if (_newCommer.id == me.id) {
       // Check If Penguin already exist.
       final bool _isPenguinAlreadyPresent =
           components.whereType<Penguin>().isNotEmpty;
@@ -295,7 +310,7 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
         Map<String, dynamic>.from(event.snapshot.value as Map));
 
     // Check if the player is you
-    if (_disconnectedUser.id == _me.id) {
+    if (_disconnectedUser.id == me.id) {
       // Check If Penguin already exist.
       final bool _isPenguinAlreadyPresent =
           components.whereType<Penguin>().isNotEmpty;
@@ -341,7 +356,7 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
     final GameUser _movingUser = GameUser.fromCollection(
         Map<String, dynamic>.from(event.snapshot.value as Map));
 
-    if (_movingUser.id == _me.id) {
+    if (_movingUser.id == me.id) {
       // Skip
 
     } else {
@@ -375,6 +390,36 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
     }
   }
 
+  void _playerTypingListener(Event event) {
+    final GameUser _typingUser = GameUser.fromCollection(
+        Map<String, dynamic>.from(event.snapshot.value as Map));
+
+    if (_typingUser.id == me.id) {
+      // Skip
+
+    } else {
+      // Other players moving
+
+      final List<OtherPenguin> _otherPenguinLists =
+          components.whereType<OtherPenguin>().toList();
+
+      final OtherPenguin _markedAsTypingPenguin = _otherPenguinLists
+          .lastWhere((element) => element.user.id == _typingUser.id);
+
+      if (_typingUser.isTyping) {
+        if (!_markedAsTypingPenguin.user.isTyping) {
+          _markedAsTypingPenguin.user.isTyping = true;
+          _markedAsTypingPenguin.timer.start();
+        }
+      } else {
+        if (_markedAsTypingPenguin.user.isTyping) {
+          _markedAsTypingPenguin.user.isTyping = false;
+          _markedAsTypingPenguin.timer.start();
+        }
+      }
+    }
+  }
+
   void _chatStreamListener(Event event) {
     final List<OtherPenguin> _otherPenguinLists =
         components.whereType<OtherPenguin>().toList();
@@ -382,7 +427,7 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
     final GameUser _chattingUser = GameUser.fromCollection(
         Map<String, dynamic>.from(event.snapshot.value as Map));
 
-    if (_chattingUser.id == _me.id) {
+    if (_chattingUser.id == me.id) {
       // Skip
       penguin.showMessage(_chattingUser.message);
     } else {
@@ -392,6 +437,8 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
         final OtherPenguin _chattingPenguin = _otherPenguinLists
             .lastWhere((element) => element.user.id == _chattingUser.id);
 
+        _chattingPenguin.user.isTyping = false;
+        _chattingPenguin.timer.start();
         _chattingPenguin.showMessage(_chattingUser.message);
       } catch (e) {
         log(e.toString());

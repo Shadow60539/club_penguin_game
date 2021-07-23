@@ -11,8 +11,11 @@ import 'package:social_media_game/presentation/game/game.dart';
 @prod
 class MovementRepo extends IMovementRepo {
   @override
-  Future<Either<MovementFailure, Unit>> updatePosition(
-      {required double x, required Background currentBackground}) async {
+  Future<Either<MovementFailure, Unit>> updatePosition({
+    required double x,
+    required Background currentBackground,
+    required bool isTyping,
+  }) async {
     try {
       final String userId = FirebaseAuth.instance.currentUser!.uid;
       final db = FirebaseDatabase.instance;
@@ -21,7 +24,8 @@ class MovementRepo extends IMovementRepo {
       await reference.child(USER_COLLECTION).child(userId).set({
         "id": userId,
         "x": x,
-        "background": currentBackground == Background.day ? "day" : "night"
+        "background": currentBackground == Background.day ? "day" : "night",
+        "isTyping": isTyping,
       });
       return right(unit);
     } catch (e) {
