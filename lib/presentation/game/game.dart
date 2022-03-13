@@ -251,7 +251,7 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
         .get();
 
     try {
-      _userCount = _snapshot!.value.keys.length as int;
+      _userCount = _snapshot.value.keys.length as int;
     } on Exception catch (_) {
       // TODO
     }

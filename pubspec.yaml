@@ -65,7 +65,7 @@ flutter:
   assets:
     - assets/
     - assets/icon/
-    - assets/audio/
+    # - assets/audio/
     - assets/images/
     - assets/images/background/screen1/
     - assets/images/background/screen2/
