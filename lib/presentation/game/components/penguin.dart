@@ -14,7 +14,8 @@ import 'package:social_media_game/presentation/game/components/text_box.dart';
 import 'package:social_media_game/presentation/game/game.dart';
 
 class Penguin extends SpriteAnimationComponent
-    with JoystickListener, HasGameRef<ClubPenguinGame> {
+    with HasGameRef<ClubPenguinGame> {
+  final JoystickComponent joystick;
   late SpriteAnimation _idleAnimation;
   late SpriteAnimation _chatIdleAnimation;
   late SpriteAnimation _walkAnimation;
@@ -22,10 +23,8 @@ class Penguin extends SpriteAnimationComponent
   MyTextBox? _myTextBox;
 
   late Timer _timer;
-  // Debouncer
-  late Timer _sendingMessageTimer;
 
-  Penguin() {
+  Penguin(this.joystick) {
     final SpriteSheet _idleSpriteSheet = SpriteSheet(
         image: Flame.images.fromCache("idle_me.png"), srcSize: Vector2(32, 48));
     final SpriteSheet _chatIdleSpriteSheet = SpriteSheet(
@@ -39,13 +38,11 @@ class Penguin extends SpriteAnimationComponent
         _chatIdleSpriteSheet.createAnimation(stepTime: 0.1, row: 0);
     _walkAnimation = _walkSpriteSheet.createAnimation(stepTime: 0.1, row: 0);
 
-    _timer = Timer(1, repeat: true, callback: () {
+    _timer = Timer(1, repeat: true, onTick: () {
       _updateXToServer(x: x, currentBackground: gameRef.currentBackground);
       // _updateBackgroundToServer(gameRef.currentBackground);
     });
     _timer.start();
-
-    _sendingMessageTimer = Timer(5);
 
     animation = _idleAnimation;
   }
@@ -64,18 +61,7 @@ class Penguin extends SpriteAnimationComponent
   @override
   Future<void> update(double t) async {
     _timer.update(t);
-    _sendingMessageTimer.update(t);
-
-    if (_myTextBox != null) {
-      // Message is still showing
-      if (gameRef.components.whereType<MyTextBox>().contains(_myTextBox)) {
-        _myTextBox!.x = x;
-      } else {
-        // Message stoped showing
-
-        _myTextBox = null;
-      }
-    }
+    _myTextBox?.x = x;
 
     final double _screenWidth = gameRef.size.toSize().width;
 
@@ -84,6 +70,7 @@ class Penguin extends SpriteAnimationComponent
       x = _screenWidth - width;
     }
 
+    _updateJoystickMovement();
     super.update(t);
   }
 
@@ -102,35 +89,21 @@ class Penguin extends SpriteAnimationComponent
     ));
   }
 
-  // void _updateBackgroundToServer(Background currentBackground) {
-  //   MovementBloc.addEventWithoutContext(
-  //       MovementEvent.updateBackground(currentBackground));
-  // }
-
-  @override
-  void joystickAction(JoystickActionEvent event) {
-    if (!_sendingMessageTimer.isRunning()) {
-      _sendingMessageTimer.start();
-
-      ChatBloc.addEventWithoutContext(const ChatEvent.sendMessage("Hi!"));
-    }
-  }
-
-  @override
-  void joystickChangeDirectional(JoystickDirectionalEvent event) {
-    // TODO: implement joystickChangeDirectional
-    if (event.directional == JoystickMoveDirectional.moveRight ||
-        event.directional == JoystickMoveDirectional.moveUpRight ||
-        event.directional == JoystickMoveDirectional.moveDownRight) {
+  void _updateJoystickMovement() {
+    if (joystick.direction == JoystickDirection.right ||
+        joystick.direction == JoystickDirection.upRight ||
+        joystick.direction == JoystickDirection.downRight) {
       if (x >= gameRef.size.toSize().width * 0.5) {
         // gameRef.camera.add(Position(2, 0));
       }
-      renderFlipX = false;
+      if (isFlippedHorizontally) {
+        flipHorizontallyAroundCenter();
+      }
       x = x + 2;
       // _updateXToServer(x.ceil());
-    } else if (event.directional == JoystickMoveDirectional.moveLeft ||
-        event.directional == JoystickMoveDirectional.moveUpLeft ||
-        event.directional == JoystickMoveDirectional.moveDownLeft) {
+    } else if (joystick.direction == JoystickDirection.left ||
+        joystick.direction == JoystickDirection.upLeft ||
+        joystick.direction == JoystickDirection.downLeft) {
       if (x > 0) {
         x = x - 2;
         // _updateXToServer(x.ceil());
@@ -140,27 +113,39 @@ class Penguin extends SpriteAnimationComponent
         }
       }
 
-      renderFlipX = true;
+      if (!isFlippedHorizontally) {
+        flipHorizontallyAroundCenter();
+      }
     }
 
-    if (event.directional == JoystickMoveDirectional.idle) {
+    if (joystick.direction == JoystickDirection.idle) {
       animation = _idleAnimation;
     } else {
       animation = _walkAnimation;
     }
   }
 
+  // void _updateBackgroundToServer(Background currentBackground) {
+  //   MovementBloc.addEventWithoutContext(
+  //       MovementEvent.updateBackground(currentBackground));
+  // }
+
+  void onQuickChatPressed() {
+    ChatBloc.addEventWithoutContext(const ChatEvent.sendMessage("Hi!"));
+  }
+
   void showMessage(String? message) {
     if (message == null) {
       return;
     }
-    if (_myTextBox == null) {
-      _myTextBox = MyTextBox(message)
-        ..x = x
-        ..y = y;
-      gameRef.add(_myTextBox!);
-      log("Message added $message");
-    } else {}
+    if (_myTextBox != null && !_myTextBox!.isRemoved) {
+      gameRef.remove(_myTextBox!);
+    }
+    _myTextBox = MyTextBox(message)
+      ..x = x
+      ..y = y;
+    gameRef.add(_myTextBox!);
+    log("Message added $message");
   }
 
   void hide() {

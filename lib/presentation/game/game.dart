@@ -6,6 +6,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
+import 'package:flame/input.dart';
+import 'package:flame/palette.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,7 +32,7 @@ const LEVEL_TEXT = "LEVEL_TEXT";
 enum Background { day, night }
 
 @lazySingleton
-class ClubPenguinGame extends BaseGame with HasDraggableComponents {
+class ClubPenguinGame extends FlameGame {
   /// Penguin extending `SpriteAnimationComponent`
   ///
   /// Component used to indentify the penguin you
@@ -41,6 +43,8 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
   /// There is some initial setup inorder for the joystick to work
   /// Reference:- https://flame-engine.org/docs/#/input?id=joystick
   late JoystickComponent joystick;
+
+  late HudButtonComponent quickChatButton;
 
   /// DayBackground extending `ParallaxComponent`
   ///
@@ -61,27 +65,27 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
   /// In `FirebaseDatabase` when new data is added to `USER_COLLECTION`
   /// `onChildAdded` stream gets updated
   /// To hold the stream `onChildAdded`
-  late Stream<Event> _newPlayerConnectedStream;
+  late Stream<DatabaseEvent> _newPlayerConnectedStream;
 
   /// In `FirebaseDatabase` when any data is removed from `USER_COLLECTION`
   /// `onChildRemoved` stream gets updated
   /// To hold the stream `onChildRemoved`
-  late Stream<Event> _playerDisconnectedStream;
+  late Stream<DatabaseEvent> _playerDisconnectedStream;
 
   /// In `FirebaseDatabase` when already existing data is changed in `USER_COLLECTION`
   /// `onChildChanged` stream gets updated
   /// To hold the stream `onChildChanged`
-  late Stream<Event> _playerMovingStream;
+  late Stream<DatabaseEvent> _playerMovingStream;
 
   /// In `FirebaseDatabase` when already existing data is changed in `USER_COLLECTION`
   /// `onChildChanged` stream gets updated
   /// To hold the stream `onChildChanged`
-  late Stream<Event> _playerTypingStream;
+  late Stream<DatabaseEvent> _playerTypingStream;
 
   /// In `FirebaseDatabase` when already existing data is changed in `MESSAGE_COLLECTION`
   /// `onChildChanged` stream gets updated
   /// To hold the stream `onChildChanged`
-  late Stream<Event> _chatStream;
+  late Stream<DatabaseEvent> _chatStream;
 
   /// To display the no of online players count as text
   late TextComponent onlineText;
@@ -96,7 +100,6 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
     dayBackground = DayBackground();
     nightBackground = NightBackground();
     currentBackground = Background.day;
-    penguin = Penguin();
     me = BlocProvider.of<AuthBloc>(context).state.user!;
     _newPlayerConnectedStream = FirebaseDatabase.instance
         .reference()
@@ -123,12 +126,14 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
     _userCount = 0;
 
     onlineText = TextComponent(
-      "Online: 0",
+      text: "Online: 0",
       textRenderer: TextPaint(
-          config: TextPaintConfig(
-              fontSize: 8,
-              color: Colors.white,
-              fontFamily: GoogleFonts.pressStart2p().fontFamily!)),
+        style: TextStyle(
+          fontSize: 8,
+          color: Colors.white,
+          fontFamily: GoogleFonts.pressStart2p().fontFamily,
+        ),
+      ),
     )
       ..x = 30
       ..y = 20;
@@ -140,28 +145,30 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
     // other components are visible
     // Think of it like as `Stack` widget
 
-    await add(nightBackground); // ----> priority: -1
-    await add(dayBackground); // ----> priority: 0
+    await add(nightBackground); // ----> priority: 0
+    await add(dayBackground); // ----> priority: 1
 
     // Joystick
+    final knobPaint = BasicPalette.black.withAlpha(200).paint();
+    final backgroundPaint = BasicPalette.white.withAlpha(100).paint();
     joystick = JoystickComponent(
-      directional: JoystickDirectional(),
-      actions: [
-        JoystickAction(
-          actionId: 1, // required
-          action: JoystickElement.sprite(
-              Sprite(Flame.images.fromCache("chat.png"))),
-          // size: 50,
-          color: Colors.white,
-          margin: const EdgeInsets.all(50), // optional
-        ),
-      ],
-      gameRef: this,
+      knob: CircleComponent(radius: 15, paint: knobPaint),
+      background: CircleComponent(radius: 50, paint: backgroundPaint),
+      margin: const EdgeInsets.only(left: 40, bottom: 40),
     );
-
-    joystick.addObserver(penguin);
     add(joystick);
-
+    penguin = Penguin(joystick);
+    quickChatButton = HudButtonComponent(
+      button: SpriteComponent(
+        sprite: Sprite(Flame.images.fromCache("chat.png")),
+      ),
+      margin: const EdgeInsets.only(
+        right: 40,
+        bottom: 40,
+      ),
+      onPressed: penguin.onQuickChatPressed,
+    );
+    add(quickChatButton);
     // Overlays
     WidgetsBinding.instance!.addPostFrameCallback((_) {
       overlays.add(ONLINE_GREEN);
@@ -174,6 +181,12 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
 
     // Penguin is not added here
     // It is added inside [_playerConnectedListener] method
+
+    _newPlayerConnectedStream.listen(_playerConnectedListener);
+    _playerDisconnectedStream.listen(_playerDisconnectedListener);
+    _playerMovingStream.listen(_playerMovingListener);
+    _playerTypingStream.listen(_playerTypingListener);
+    _chatStream.listen(_chatStreamListener);
 
     return super.onLoad();
   }
@@ -188,8 +201,8 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
 
     // Daytime and player on end of the screen
     if (currentBackground == Background.day && _penguinX >= _screenWidth) {
-      changePriority(nightBackground, 0);
-      changePriority(dayBackground, -1);
+      nightBackground.priority = 0;
+      dayBackground.priority = -1;
       currentBackground = Background.night;
       Provider.of<WorldProvider>(context, listen: false)
           .updateBackground(currentBackground);
@@ -199,8 +212,8 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
     }
     // Nighttime and player on start of the screen
     if (currentBackground == Background.night && _penguinX < PENGUIN_START) {
-      changePriority(nightBackground, -1);
-      changePriority(dayBackground, 0);
+      nightBackground.priority = -1;
+      dayBackground.priority = 0;
 
       currentBackground = Background.day;
       Provider.of<WorldProvider>(context, listen: false)
@@ -211,29 +224,25 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
 
     // Add penguins into right background
     final List<OtherPenguin> _otherPlayersList =
-        components.whereType<OtherPenguin>().toList();
+        children.whereType<OtherPenguin>().toList();
 
     for (final _otherPenguin in _otherPlayersList) {
       try {
         if (_otherPenguin.user.currentBackground != currentBackground) {
           _otherPenguin.hide();
+          _otherPenguin.removeMessage();
         } else {
           _otherPenguin.show();
         }
       } catch (e) {
         _otherPenguin.hide();
+        _otherPenguin.removeMessage();
       }
     }
   }
 
   @override
   void update(double t) {
-    _newPlayerConnectedStream.listen(_playerConnectedListener);
-    _playerDisconnectedStream.listen(_playerDisconnectedListener);
-    _playerMovingStream.listen(_playerMovingListener);
-    _playerTypingStream.listen(_playerTypingListener);
-    _chatStream.listen(_chatStreamListener);
-
     onlineText.text = "0nline :$_userCount";
     backGroundChangeLookUp();
 
@@ -245,21 +254,23 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
   ///
   /// It is called everytime any player joins, exists the game
   Future<void> _getOnlineUserCount() async {
-    final _snapshot = await FirebaseDatabase.instance
-        .reference()
-        .child(USER_COLLECTION)
-        .get();
+    final _snapshot =
+        await FirebaseDatabase.instance.ref().child(USER_COLLECTION).get();
 
     try {
-      _userCount = _snapshot.value.keys.length as int;
+      if (_snapshot.value == null) {
+        _userCount = 0;
+      } else {
+        _userCount = (_snapshot.value as Map).keys.length;
+      }
     } on Exception catch (_) {
       // TODO
     }
   }
 
-  void _playerConnectedListener(Event event) {
+  void _playerConnectedListener(DatabaseEvent event) {
     final List<OtherPenguin> _otherPenguinLists =
-        components.whereType<OtherPenguin>().toList();
+        children.whereType<OtherPenguin>().toList();
 
     final GameUser _newCommer = GameUser.fromCollection(
         Map<String, dynamic>.from(event.snapshot.value as Map));
@@ -268,15 +279,14 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
     if (_newCommer.id == me.id) {
       // Check If Penguin already exist.
       final bool _isPenguinAlreadyPresent =
-          components.whereType<Penguin>().isNotEmpty;
+          children.whereType<Penguin>().isNotEmpty;
       if (_isPenguinAlreadyPresent) {
         // Skip
       } else {
         _getOnlineUserCount();
         log("Me added ${_newCommer.id}");
         add(penguin);
-        components
-            .add(penguin); // why this is called again after add(penguin) ?
+        // why this is called again after add(penguin) ?
         // Because, add method adds the component on the next game tick
         // So after this loop get compiled, again the [_isPenguinAlreadyPresent]
         // will return false because the [penguin] was not added
@@ -299,13 +309,12 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
           ..y = 50
           ..x = 10);
         add(OtherPenguin(user: _newCommer)..x = _newCommer.x);
-        components.add(OtherPenguin(user: _newCommer)..x = _newCommer.x);
         return;
       }
     }
   }
 
-  Future<void> _playerDisconnectedListener(Event event) async {
+  Future<void> _playerDisconnectedListener(DatabaseEvent event) async {
     final GameUser _disconnectedUser = GameUser.fromCollection(
         Map<String, dynamic>.from(event.snapshot.value as Map));
 
@@ -313,14 +322,13 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
     if (_disconnectedUser.id == me.id) {
       // Check If Penguin already exist.
       final bool _isPenguinAlreadyPresent =
-          components.whereType<Penguin>().isNotEmpty;
+          children.whereType<Penguin>().isNotEmpty;
       if (_isPenguinAlreadyPresent) {
         _getOnlineUserCount();
 
         log("Me disconnected ${_disconnectedUser.id}");
         // markToRemove(_penguin);
         remove(penguin);
-        components.remove(penguin);
         return;
       } else {
         // Skip
@@ -329,7 +337,7 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
       // Other players
 
       final List<OtherPenguin> _otherPenguinLists =
-          components.whereType<OtherPenguin>().toList();
+          children.whereType<OtherPenguin>().toList();
 
       final bool _isDisconnectedAlreadyPresent = _otherPenguinLists
           .where((element) => element.user.id == _disconnectedUser.id)
@@ -340,30 +348,33 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
             .firstWhere((element) => element.user.id == _disconnectedUser.id);
 
         remove(_markDisconnectedPenguin);
-        components.remove(_markDisconnectedPenguin);
         _getOnlineUserCount();
         log("User disconnected ${_disconnectedUser.id}");
 
         return;
       } else {
         // Skip
-
       }
     }
   }
 
-  void _playerMovingListener(Event event) {
+  void _playerMovingListener(DatabaseEvent event) {
     final GameUser _movingUser = GameUser.fromCollection(
         Map<String, dynamic>.from(event.snapshot.value as Map));
 
     if (_movingUser.id == me.id) {
       // Skip
-
     } else {
       // Other players moving
 
       final List<OtherPenguin> _otherPenguinLists =
-          components.whereType<OtherPenguin>().toList();
+          children.whereType<OtherPenguin>().toList();
+
+      if (_otherPenguinLists
+          .where((element) => element.user.id == _movingUser.id)
+          .isEmpty) {
+        return;
+      }
 
       final OtherPenguin _markedAsMovePenguin = _otherPenguinLists
           .lastWhere((element) => element.user.id == _movingUser.id);
@@ -385,23 +396,28 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
         } else {
           _markedAsMovePenguin.walkRight();
         }
-        _markedAsMovePenguin.x += 0.2 * _m;
+        _markedAsMovePenguin.x = _movingUser.x;
       } else {}
     }
   }
 
-  void _playerTypingListener(Event event) {
+  void _playerTypingListener(DatabaseEvent event) {
     final GameUser _typingUser = GameUser.fromCollection(
         Map<String, dynamic>.from(event.snapshot.value as Map));
 
     if (_typingUser.id == me.id) {
       // Skip
-
     } else {
       // Other players moving
 
       final List<OtherPenguin> _otherPenguinLists =
-          components.whereType<OtherPenguin>().toList();
+          children.whereType<OtherPenguin>().toList();
+
+      if (_otherPenguinLists
+          .where((element) => element.user.id == _typingUser.id)
+          .isEmpty) {
+        return;
+      }
 
       final OtherPenguin _markedAsTypingPenguin = _otherPenguinLists
           .lastWhere((element) => element.user.id == _typingUser.id);
@@ -420,9 +436,9 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
     }
   }
 
-  void _chatStreamListener(Event event) {
+  void _chatStreamListener(DatabaseEvent event) {
     final List<OtherPenguin> _otherPenguinLists =
-        components.whereType<OtherPenguin>().toList();
+        children.whereType<OtherPenguin>().toList();
 
     final GameUser _chattingUser = GameUser.fromCollection(
         Map<String, dynamic>.from(event.snapshot.value as Map));
@@ -434,6 +450,11 @@ class ClubPenguinGame extends BaseGame with HasDraggableComponents {
       // Other player chating
 
       try {
+        if (_otherPenguinLists
+            .where((element) => element.user.id == _chattingUser.id)
+            .isEmpty) {
+          return;
+        }
         final OtherPenguin _chattingPenguin = _otherPenguinLists
             .lastWhere((element) => element.user.id == _chattingUser.id);
 

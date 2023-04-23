@@ -21,8 +21,9 @@ class OtherPenguin extends SpriteAnimationComponent
   MyTextBox? _myTextBox;
 
   final GameUser user;
+
   OtherPenguin({required this.user}) {
-    timer = Timer(0.25, callback: () {
+    timer = Timer(0.25, onTick: () {
       if (user.isTyping) {
         animation = _chatIdleAnimation;
       } else {
@@ -88,23 +89,14 @@ class OtherPenguin extends SpriteAnimationComponent
   @override
   void update(double t) {
     timer.update(t);
-
-    if (_myTextBox != null) {
-      // Message is still showing
-      if (gameRef.components.whereType<MyTextBox>().contains(_myTextBox)) {
-        _myTextBox!.x = x;
-      } else {
-        // Message stoped showing
-
-        _myTextBox = null;
-      }
-    }
-
+    _myTextBox?.x = x;
     super.update(t);
   }
 
   void walkLeft() {
-    renderFlipX = true;
+    if (!isFlippedHorizontally) {
+      flipHorizontallyAroundCenter();
+    }
     if (user.isTyping) {
       animation = _chatWalkAnimation;
     } else {
@@ -113,7 +105,9 @@ class OtherPenguin extends SpriteAnimationComponent
   }
 
   void walkRight() {
-    renderFlipX = false;
+    if (isFlippedHorizontally) {
+      flipHorizontallyAroundCenter();
+    }
     if (user.isTyping) {
       animation = _chatWalkAnimation;
     } else {
@@ -136,12 +130,16 @@ class OtherPenguin extends SpriteAnimationComponent
       return;
     }
 
-    if (_myTextBox == null) {
-      _myTextBox = MyTextBox(message)
-        ..x = x
-        ..y = y;
-      gameRef.add(_myTextBox!);
-      log("Message added $message");
+    _myTextBox = MyTextBox(message)
+      ..x = x
+      ..y = y;
+    gameRef.add(_myTextBox!);
+    log("Message added $message");
+  }
+
+  void removeMessage() {
+    if (_myTextBox != null && !_myTextBox!.isRemoved) {
+      _myTextBox!.removeFromParent();
     }
   }
 

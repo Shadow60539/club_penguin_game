@@ -2,7 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flame/src/parallax.dart';
 import 'package:social_media_game/presentation/game/game.dart';
 
-class DayBackground extends ParallaxComponent with HasGameRef<ClubPenguinGame> {
+class DayBackground extends ParallaxComponent<ClubPenguinGame> {
   DayBackground();
 
   @override
@@ -19,8 +19,8 @@ class DayBackground extends ParallaxComponent with HasGameRef<ClubPenguinGame> {
     ];
     final dayLayers = dayImages.map((image) async =>
         ParallaxLayer(await image, velocityMultiplier: Vector2(1, 0)));
-    parallax = ParallaxComponent.fromParallax(
-      Parallax(
+    parallax = ParallaxComponent(
+      parallax: Parallax(
         await Future.wait(dayLayers),
         baseVelocity: Vector2(5, 0),
       ),
@@ -30,8 +30,7 @@ class DayBackground extends ParallaxComponent with HasGameRef<ClubPenguinGame> {
   }
 }
 
-class NightBackground extends ParallaxComponent
-    with HasGameRef<ClubPenguinGame> {
+class NightBackground extends ParallaxComponent<ClubPenguinGame> {
   NightBackground();
 
   @override
@@ -55,8 +54,8 @@ class NightBackground extends ParallaxComponent
     ];
     final dayLayers = dayImages.map((image) async =>
         ParallaxLayer(await image, velocityMultiplier: Vector2(1, 0)));
-    parallax = ParallaxComponent.fromParallax(
-      Parallax(
+    parallax = ParallaxComponent(
+      parallax: Parallax(
         await Future.wait(dayLayers),
         baseVelocity: Vector2(5, 0),
       ),

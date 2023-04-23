@@ -10,11 +10,11 @@ import 'package:social_media_game/presentation/game/game.dart';
 
 const double MESSAGE_SHOW_TIME = 4;
 
-final _regularTextConfig = TextPaintConfig(color: BasicPalette.black.color);
 final _tiny = TextPaint(
-    config: _regularTextConfig
-        .withFontSize(8.0)
-        .withFontFamily(GoogleFonts.pressStart2p().fontFamily!));
+    style: TextStyle(
+        fontSize: 8,
+        color: BasicPalette.black.color,
+        fontFamily: GoogleFonts.pressStart2p().fontFamily));
 
 final _white = Paint()
   ..color = BasicPalette.white.color
@@ -22,15 +22,16 @@ final _white = Paint()
 
 class MyTextBox extends TextBoxComponent with HasGameRef<ClubPenguinGame> {
   late Timer _timer;
+
   MyTextBox(String text)
       : super(
-          text,
+          text: text,
           textRenderer: _tiny,
           boxConfig: TextBoxConfig(
               timePerChar: 0.05, maxWidth: text.length * 9.0), // T&E
         ) {
-    _timer = Timer(MESSAGE_SHOW_TIME + text.length * 0.15, callback: () {
-      remove();
+    _timer = Timer(MESSAGE_SHOW_TIME + text.length * 0.15, onTick: () {
+      removeFromParent();
     });
   }
 
@@ -69,16 +70,17 @@ class MyTextBox extends TextBoxComponent with HasGameRef<ClubPenguinGame> {
 class NotificationTextBox extends TextBoxComponent
     with HasGameRef<ClubPenguinGame> {
   late Timer _timer;
+
   NotificationTextBox()
       : super(
-          'New Penguin joined',
+          text: 'New Penguin joined',
           textRenderer: _tiny,
           boxConfig: TextBoxConfig(
               timePerChar: 0.05,
               maxWidth: 'New Penguin joined'.length * 9.0), // T&E
         ) {
-    _timer = Timer(MESSAGE_SHOW_TIME, callback: () {
-      remove();
+    _timer = Timer(MESSAGE_SHOW_TIME, onTick: () {
+      removeFromParent();
     });
   }
 
@@ -86,11 +88,6 @@ class NotificationTextBox extends TextBoxComponent
   void onMount() {
     _timer.start();
     super.onMount();
-  }
-
-  @override
-  void onRemove() {
-    super.onRemove();
   }
 
   @override
